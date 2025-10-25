@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iammujahit Premium Age Calculator</title>
+<style>
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+:root {
+    --bg: #f3f6f9;
+    --text: #222;
+    --card: #fff;
+    --primary: #0078ff;
+}
+.dark {
+    --bg: #1e1e1e;
+    --text: #f5f5f5;
+    --card: #2c2c2c;
+    --primary: #66b3ff;
+}
+
+.container {
+    background: var(--card);
+    padding: 20px 25px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+h1 {
+    color: var(--primary);
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 18px;
+    margin: 8px 0;
+}
+
+select, button {
+    padding: 8px 10px;
+    margin: 4px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+button {
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background: #005bcc;
+}
+
+.result {
+    margin-top: 15px;
+    font-weight: 600;
+}
+
+.copy-btn {
+    margin-top: 10px;
+    background: #00c851;
+}
+
+.copy-btn:hover {
+    background: #009e3e;
+}
+
+.theme-toggle {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 14px;
+    background: var(--card);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+
+.clock {
+    font-weight: 600;
+    margin-top: 10px;
+    color: var(--primary);
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="toggleTheme()">🌗 Theme</button>
+
+<div class="container">
+    <h1>🎉 iammujahit Premium Age Calculator 🎂</h1>
+    <div class="clock" id="clock"></div>
+
+    <h2>Select Your Birth Date</h2>
+    <select id="day"></select>
+    <select id="month"></select>
+    <select id="year"></select>
+    <br><br>
+    <button onclick="calculateAge()">Calculate</button>
+
+    <div class="result" id="result"></div>
+    <button class="copy-btn" onclick="copyResult()">📋 Copy Result</button>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+// ===== Populate Dropdowns =====
+const daySel = document.getElementById('day');
+const monthSel = document.getElementById('month');
+const yearSel = document.getElementById('year');
+const resultDiv = document.getElementById('result');
+const confettiCanvas = document.getElementById('confetti');
+const ctx = confettiCanvas.getContext('2d');
+
+for(let d=1; d<=31; d++){ daySel.innerHTML += `<option>${d}</option>`; }
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+months.forEach((m,i)=>monthSel.innerHTML += `<option value="${i}">${m}</option>`);
+const thisYear = new Date().getFullYear();
+for(let y=thisYear; y>=1900; y--){ yearSel.innerHTML += `<option>${y}</option>`; }
+
+// ===== Save/Load DOB =====
+window.onload = () => {
+  const saved = JSON.parse(localStorage.getItem("dob"));
+  if(saved){
+    daySel.value = saved.day;
+    monthSel.value = saved.month;
+    yearSel.value = saved.year;
+  }
+  setInterval(updateClock, 1000);
+};
+
+// ===== Clock =====
+function updateClock(){
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}
+
+// ===== Age Calculation =====
+function calculateAge(){
+    const d = parseInt(daySel.value);
+    const m = parseInt(monthSel.value);
+    const y = parseInt(yearSel.value);
+    if(!d || isNaN(m) || !y){ alert("Select a valid DOB"); return; }
+
+    localStorage.setItem("dob", JSON.stringify({day:d,month:m,year:y}));
+
+    const today = new Date();
+    const birth = new Date(y, m, d);
+    let age = today.getFullYear() - y;
+    if(today < new Date(today.getFullYear(), m, d)) age--;
+
+    // Next Birthday
+    let next = new Date(today.getFullYear(), m, d);
+    if(today > next) next.setFullYear(today.getFullYear()+1);
+    const diff = next - today;
+    const days = Math.floor(diff / (1000*60*60*24));
+    const hrs = Math.floor((diff / (1000*60*60)) % 24);
+    const mins = Math.floor((diff / (1000*60)) % 60);
+
+    resultDiv.innerHTML = `🎂 You are <b>${age}</b> years old.<br>Next birthday in ${days} days, ${hrs} hours, ${mins} mins.`;
+
+    if(days === 0) startConfetti();
+}
+
+// ===== Copy Result =====
+function copyResult(){
+    navigator.clipboard.writeText(resultDiv.textContent);
+    alert("Copied!");
+}
+
+// ===== Theme Toggle =====
+function toggleTheme(){
+    document.body.classList.toggle('dark');
+    localStorage.setItem("theme", document.body.classList.contains('dark') ? "dark" : "light");
+}
+if(localStorage.getItem("theme")==="dark") document.body.classList.add('dark');
+
+// ===== Confetti =====
+function startConfetti(){
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    let particles = [];
+    for(let i=0;i<150;i++){
+        particles.push({
+            x: Math.random()*confettiCanvas.width,
+            y: Math.random()*confettiCanvas.height - confettiCanvas.height,
+            color: `hsl(${Math.random()*360},100%,60%)`,
+            size: Math.random()*6+3,
+            speed: Math.random()*3+2
+        });
+    }
+    function draw(){
+        ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+        particles.forEach(p=>{
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+            p.y += p.speed;
+            if(p.y > confettiCanvas.height){
+                p.y = -10; p.x = Math.random()*confettiCanvas.width;
+            }
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+    setTimeout(()=>ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height),5000);
+}
+</script>
+</body>
+</html>
